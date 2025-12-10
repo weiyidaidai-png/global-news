@@ -1,0 +1,1318 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全球新闻标题聚合器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #fff;
+            border-right: 1px solid #e0e0e0;
+            padding: 20px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .source-list {
+            list-style: none;
+        }
+
+        .source-item {
+            padding: 10px 15px;
+            margin-bottom: 5px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .source-item:hover {
+            background-color: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .source-item.active {
+            background-color: #3498db;
+            color: #fff;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .header {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .search-bar {
+            position: relative;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .news-stats {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .news-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .news-card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-left: 4px solid #3498db;
+        }
+
+        .news-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .news-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .news-source {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: #3498db;
+            color: #fff;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .news-category {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: #95a5a6;
+            color: #fff;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .news-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .news-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .news-title a {
+            color: #2c3e50;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .news-title a:hover {
+            color: #3498db;
+        }
+
+        .refresh-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #27ae60;
+            color: #fff;
+            border-radius: 25px;
+            font-size: 14px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .refresh-indicator.show {
+            opacity: 1;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .no-results h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: static;
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .news-card {
+                padding: 15px;
+            }
+
+            .news-title {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>新闻来源</h2>
+            <ul class="source-list" id="sourceList">
+                <li class="source-item active" data-source="all">全部来源</li>
+                
+                <li class="source-item" data-source="New York Times">New York Times</li>
+                
+                <li class="source-item" data-source="东方财富网">东方财富网</li>
+                
+                <li class="source-item" data-source="人民网">人民网</li>
+                
+                <li class="source-item" data-source="南方网">南方网</li>
+                
+                <li class="source-item" data-source="央视新闻">央视新闻</li>
+                
+                <li class="source-item" data-source="新华网">新华网</li>
+                
+                <li class="source-item" data-source="观察者网">观察者网</li>
+                
+            </ul>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <h1>全球新闻标题聚合器</h1>
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="搜索新闻标题...">
+                </div>
+                <div class="news-stats">
+                    共 <span id="totalNews">86</span> 条新闻 | 最后更新: <span id="lastUpdate">2025-12-10 11:22:49</span>
+                </div>
+            </div>
+
+            <div class="news-grid" id="newsGrid">
+                
+                    
+                    <div class="news-card" data-source="东方财富网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">东方财富网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:46</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://ai.eastmoney.com/miaoxiang/dfcfapp" target="_blank" rel="noopener noreferrer">东方财富APP现已全面接入妙想大模型，点击免费使用>></a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="南方网" data-category="科技">
+                        <div class="news-header">
+                            <span class="news-source">南方网</span>
+                            <span class="news-category">科技</span>
+                            <span class="news-time">2025-12-10 11:22:41</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://info.newsgd.com/node_a42013034a/009f713c8e.shtml" target="_blank" rel="noopener noreferrer">Huizhou leads province in growth of digital yuan transactions</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="南方网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">南方网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:41</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://south.newsgd.com/dynamic?id=126527" target="_blank" rel="noopener noreferrer">China to remain big actor of present and next phase of globalization: Former WTO DG</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="南方网" data-category="商业">
+                        <div class="news-header">
+                            <span class="news-source">南方网</span>
+                            <span class="news-category">商业</span>
+                            <span class="news-time">2025-12-10 11:22:41</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://south.newsgd.com/dynamic?id=126528" target="_blank" rel="noopener noreferrer">Exclusive: China-Germany economic and trade ties embody the importance of open markets: Peter Jungen</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/ShiYang/2025_12_07_799628.shtml" target="_blank" rel="noopener noreferrer">一周军评：美国重返西半球会削减印太军力吗？</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/internation/2025_10_09_792677.shtml?s=sywglbt" target="_blank" rel="noopener noreferrer">“噩梦照进现实”，布鲁塞尔坐立不安</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/internation/2025_11_15_797156.shtml?s=sywglbt" target="_blank" rel="noopener noreferrer">给德国上眼药？“邀请选择党访美，一来就40人”</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/IvanKrastev1/2025_12_07_799644.shtml" target="_blank" rel="noopener noreferrer">特朗普对欧洲的影响，就像戈尔巴乔夫1980年代对苏东阵营的影响</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/wuhailong/2025_12_08_799702.shtml" target="_blank" rel="noopener noreferrer">日本极可能成为中俄在亚太最大、最直接的威胁</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/yulonggang/2025_12_08_799698.shtml" target="_blank" rel="noopener noreferrer">普法工作怎么做，才能让老百姓接受？</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/AKIRA/2025_12_08_799708.shtml" target="_blank" rel="noopener noreferrer">看不到《疯狂动物城2》的“退步”，是中国观众的幸福</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/QiangGe/2025_12_08_799709.shtml" target="_blank" rel="noopener noreferrer">工业化带来的每一次产业升级，都是你我改变命运的机会</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/gaozhikai/2025_12_08_799696.shtml" target="_blank" rel="noopener noreferrer">“台湾之盾”只是炒股新概念，无论买啥装备未来归宿都是博物馆</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/ZhouDeYu/2025_12_08_799731.shtml" target="_blank" rel="noopener noreferrer">美国是典型的伪装成正常国家的怪物</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/yanmo/2025_12_08_799729.shtml" target="_blank" rel="noopener noreferrer">特朗普的国安战略：“卖台保台”“捧华反华”都是一回事</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/MengHui/2025_12_09_799812.shtml" target="_blank" rel="noopener noreferrer">杨贵妃沐浴的华清池里，有座“瑟瑟山”</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/GaoDaWei/2025_12_09_799818.shtml" target="_blank" rel="noopener noreferrer">当下的世界秩序，存在一个核心悖论</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/XueLan/2025_12_09_799810.shtml" target="_blank" rel="noopener noreferrer">中国人工智能发展无需陷入美国的“竞争叙事”</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/changluowen/2025_12_09_799815.shtml" target="_blank" rel="noopener noreferrer">韩国发了一份“崇美抑中”的报告，却预示了日本的必然衰败</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/yuehan/2025_12_09_799822.shtml" target="_blank" rel="noopener noreferrer">泰柬二番战！美国劝架，为啥成了笑话？</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/industry-science/2025_12_09_799841.shtml" target="_blank" rel="noopener noreferrer">想卖就得买？看看H20的命运吧</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/zhuwanzhang/2025_12_09_799856.shtml" target="_blank" rel="noopener noreferrer">历史课本更换朱元璋画像，依据是什么？</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/jiangyuzhou/2025_12_09_799809.shtml" target="_blank" rel="noopener noreferrer">《治安管理处罚法》的大讨论，该如何体现依法治国的“人民底色”？</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/xinzhiguanchasuo/2025_12_09_799858.shtml" target="_blank" rel="noopener noreferrer">H200是不是要让中国“上瘾”？</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/ZhangZhongZuo/2025_12_09_799855.shtml" target="_blank" rel="noopener noreferrer">从业内角度说说“航班锁座”这事</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/internation/2025_12_10_799932.shtml" target="_blank" rel="noopener noreferrer">特朗普暗指：中国若成第一，印度就是美最大敌手</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/ShenYi/2025_12_10_799940.shtml" target="_blank" rel="noopener noreferrer">用最强硬的方式，吹响战略撤退号角</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/ChenFeng3/2025_12_10_799931.shtml" target="_blank" rel="noopener noreferrer">面对日本的叫嚣，“辽宁”号用实际行动给出反问</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/zuoweixin/2025_12_10_799928.shtml" target="_blank" rel="noopener noreferrer">牺牲86年后，这对革命烈士伉俪在墓前团圆</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/JiangFeng3/2025_12_10_799936.shtml" target="_blank" rel="noopener noreferrer">德国在台湾问题上的认知，不如法国全面深刻？</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/internation/2025_12_10_799941.shtml" target="_blank" rel="noopener noreferrer">只用10个月，欧洲“摆脱中国”技术却在华率先落地</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/politics/2025_12_10_799937.shtml" target="_blank" rel="noopener noreferrer">学习新语·展望“十五五”｜锚定推动高质量发展这个主题</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="观察者网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">观察者网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:38</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.guancha.cn/politics/2025_12_10_799938.shtml" target="_blank" rel="noopener noreferrer">高质量发展新成效丨迎难而上 奋力拼搏 中国经济破浪前行</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="央视新闻" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">央视新闻</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:35</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://tv.cctv.com/2025/12/10/VIDEScbKZrdqF3fkvbmw34VQ251210.shtml" target="_blank" rel="noopener noreferrer">国家能源局：今年原油产量有望达到2.15亿吨 创新高</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="央视新闻" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">央视新闻</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:35</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://news.cctv.com/2025/12/10/ARTI6C8iy4zQhqwUDsHBJ0PH251210.shtml" target="_blank" rel="noopener noreferrer">职业版图“更新” 职业赛道新意迭出</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="央视新闻" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">央视新闻</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:35</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://news.cctv.com/2025/12/10/ARTI21g3I3jM7Pe2zXGyh0cI251210.shtml" target="_blank" rel="noopener noreferrer">【感知中国活力】入境游火热 消费潜力持续释放</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.news.cn/local/20251209/7418e90416a244d887839f586d9f2305/c.html" target="_blank" rel="noopener noreferrer">贵州“生态果”蝶变为增收致富“黄金果”</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.news.cn/photo/20251209/3d4bb6ea452046879bfdcfc543707db6/c.html" target="_blank" rel="noopener noreferrer">石家庄地铁5号线冬季施工有序推进</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.news.cn/local/20251209/7058f8d12a7d48f49972f662b73011fe/c.html" target="_blank" rel="noopener noreferrer">为冰雪赴一座城丨解锁冬日限定快乐</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.news.cn/photo/20251209/f6d032950a674e9ab90b360bd670a790/c.html" target="_blank" rel="noopener noreferrer">海口：走进自贸港飞机维修“4S店”</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.news.cn/photo/20251209/01ab6399fbb042fba46b5f0ceb392b57/c.html" target="_blank" rel="noopener noreferrer">厦金大桥(厦门段)大节段钢箱梁顺利发运</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.news.cn/politics/20251210/ed8025bdef0a4db78da7b1d047793ab0/c.html" target="_blank" rel="noopener noreferrer">千笔楼｜肆意的“Ctrl C+Ctrl V”，击穿了哪些底线？</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://my-h5news.app.xinhuanet.com/h5activity/yunzhibo/#/?roomId=69383fe1e4b0f6542d51c390&isFull=0&isTest=no&isXR=0" target="_blank" rel="noopener noreferrer">微短剧中国行｜爆款诞生记！解锁青岛“短剧工厂”的政策红利与出海秘籍</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.news.cn/photo/20251209/fb251c1c07514b3f8b5285dcf2111f64/c.html" target="_blank" rel="noopener noreferrer">中国之城丨陕西榆林：黄土高原上的绿洲</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.news.cn/politics/20251209/b6fac645a29742f385e591ee43a58aa7/c.html" target="_blank" rel="noopener noreferrer">我国首个国家级陆相页岩油示范区建设任务全面完成</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="http://www.news.cn/sikepro/20251206/3a67e4e1633447448c641637940e011a/c.html" target="_blank" rel="noopener noreferrer">问答中国经济丨黄群慧：建设现代化产业体系，建什么？怎么建？</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.news.cn/auto/20251208/3d9babe8d88548c9b0df6be3e54f215f/c.html" target="_blank" rel="noopener noreferrer">一汽奥迪双旗舰 定义豪华出行新范式</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="http://www.news.cn/20251209/13df185cc54841e5bec1de7e3de0957d/c.html" target="_blank" rel="noopener noreferrer">专访丨苏炳添：跋涉归来，再次起跑</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.news.cn/photo/20251209/c5e43418587a4c548286c63439af0c3a/c.html" target="_blank" rel="noopener noreferrer">世界首列3.5万吨级重载群组列车试验开行成功</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.news.cn/world/20251209/80ca75fabd3445ff9f11098b39dd992e/c.html" target="_blank" rel="noopener noreferrer">中俄两军组织实施第10次联合空中战略巡航</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.news.cn/ci/20251210/5c836af767ad4be49842eaed8840ba20/c.html" target="_blank" rel="noopener noreferrer">名家荐书丨刘玉堂：读《楚文化史》尽览楚文明恢弘画卷</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="http://www.news.cn/sikepro/20251210/42a134436af54035af7ef8644ea270b2/c.html" target="_blank" rel="noopener noreferrer">问答中国经济丨葛磊：“十五五”时期新技术将如何赋能旅游业？</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://liuyan.www.gov.cn/2026wwzfgzbgtjy/index.htm?q=xhw" target="_blank" rel="noopener noreferrer">2026“@国务院 我为政府工作报告提建议”</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.news.cn/politics/20251210/1d149e864145420f938da8d347fc91ae/c.html" target="_blank" rel="noopener noreferrer">大国五年丨山海协同陆海联动，绘就万里山河新画卷</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.news.cn/fortune/20251209/a84ca48f3be541e7a54e0cbbda43e7b5/c.html" target="_blank" rel="noopener noreferrer">筑牢发展安全根基 守住风险防控底线——解码中国经济稳健前行的底气</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.news.cn/politics/leaders/20251205/ee10b7db3de44ae69a02de23b9d6f67e/c.html" target="_blank" rel="noopener noreferrer">国际志愿者日，重温总书记对志愿服务事业的殷切期望</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.news.cn/politics/leaders/20251208/f59a0467a37c4a2f9102ec82b671aa8a/c.html" target="_blank" rel="noopener noreferrer">习近平总书记引领中国经济收官“十四五”擘画新蓝图</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="新华网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">新华网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:32</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.news.cn/politics/leaders/20251209/939507cbafec4c0b8c4830c13e17fd64/c.html" target="_blank" rel="noopener noreferrer">展望“十五五”｜锚定推动高质量发展这个主题</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="人民网" data-category="社会">
+                        <div class="news-header">
+                            <span class="news-source">人民网</span>
+                            <span class="news-category">社会</span>
+                            <span class="news-time">2025-12-10 11:22:29</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="http://health.people.com.cn/n1/2025/1210/c14739-40621204.html" target="_blank" rel="noopener noreferrer">激发凝聚推动经济社会发展的“银发力量”</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="人民网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">人民网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:29</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="http://ent.people.com.cn/n1/2025/1210/c1012-40621221.html" target="_blank" rel="noopener noreferrer">2025中国公路自行车职业联赛楚雄开赛</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="人民网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">人民网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:29</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="http://sh.people.com.cn/n2/2025/1209/c346252-41436892.html
+" target="_blank" rel="noopener noreferrer">有故事的“228”如何打造“人民城市样板间”？</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="人民网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">人民网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:29</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="http://world.people.com.cn/n1/2025/1210/c1002-40620928.html" target="_blank" rel="noopener noreferrer">中国—东盟自贸区3.0版是区域经济一体化的重要里程碑</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="人民网" data-category="社会">
+                        <div class="news-header">
+                            <span class="news-source">人民网</span>
+                            <span class="news-category">社会</span>
+                            <span class="news-time">2025-12-10 11:22:29</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="http://edu.people.com.cn/n1/2025/1210/c1006-40621183.html" target="_blank" rel="noopener noreferrer">2025年版《社会工作者职业资格考试大纲》发布</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="人民网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">人民网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:29</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="http://society.people.com.cn/n1/2025/1210/c1008-40621022.html" target="_blank" rel="noopener noreferrer">楼上楼下，一道水渍引发的“战争”如何解</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="人民网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">人民网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:29</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="http://finance.people.com.cn/n1/2025/1210/c1004-40621252.html" target="_blank" rel="noopener noreferrer">“认知卸载”，人类大脑会陷入舒适区吗</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="人民网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">人民网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:29</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="http://finance.people.com.cn/n1/2025/1210/c1004-40621290.html" target="_blank" rel="noopener noreferrer">以并购重组之“进”培育资本市场之“新”</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="人民网" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">人民网</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:29</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="http://world.people.com.cn/n1/2025/1210/c1002-40620926.html" target="_blank" rel="noopener noreferrer">从《天工开物》到“深度求索”的启示</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="http://www.nytimes.com/crosswords/game/mini" target="_blank" rel="noopener noreferrer">The Mini CrosswordSolve this bite-sized puzzle in just a few minutes.</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/crosswords/game/daily" target="_blank" rel="noopener noreferrer">The CrosswordGet clued in with wordplay, every day.</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/puzzles/spelling-bee" target="_blank" rel="noopener noreferrer">Spelling BeeHow many words can you make with 7 letters?</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/games/pips" target="_blank" rel="noopener noreferrer">PipsPlace every domino in the right spot.</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/games/connections?GAMES_connectionsRollout_1130=1_ConnectionsV2" target="_blank" rel="noopener noreferrer">ConnectionsGroup words that share a common thread.</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/games/wordle/index.html" target="_blank" rel="noopener noreferrer">WordleGuess the 5-letter word with 6 chances.</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="体育">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">体育</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/athletic/connections-sports-edition" target="_blank" rel="noopener noreferrer">Play Connections: Sports Edition</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="体育">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">体育</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/athletic/" target="_blank" rel="noopener noreferrer">The AthleticSports coverage</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/2025/12/09/world/africa/iain-douglas-hamilton-dead.html" target="_blank" rel="noopener noreferrer">Michelle Pemberton/USA Today Network, via Imagn ImagesIain Douglas-Hamilton, Who Studied and Protected Elephants, Dies at 83Born into an aristocratic British family, he turned his knowledge of the world’s largest land mammals to the cause of saving them from poachers.5 min read</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/2025/12/09/world/trump-us-europe-australia-social-media.html" target="_blank" rel="noopener noreferrer">The WorldTrump and Europe’s Far RightThe American national security strategy echoes the language of far-right parties. But hardliners across the Atlantic seem unimpressed.7 min read</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/2025/12/09/dining/best-dishes-america.html" target="_blank" rel="noopener noreferrer">Madelyn MarkoeHrizuk PhotoDaija Guy for The New York TimesTim CheungHawkeye JohnsonMontsho Hughes</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/2025/12/09/world/europe/france-brigitte-macron-feminists-slur.html" target="_blank" rel="noopener noreferrer">French First Lady’s Insult Against Feminist Protesters Prompts OutcryBrigitte Macron used a slur to criticize protesters who had interrupted a show by a French comedian accused of rape in 2021, in a case that was dismissed.3 min readGonzalo Fuentes/Reuters</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/card/2025/12/09/us/guns-cloners-usa" target="_blank" rel="noopener noreferrer">Meet American Gun Culture’s Biggest NerdsCloners are gun enthusiasts who are mostly millennial and Gen Z white men who look like a mix of ’90s nerds, tactical skateboarders and well-armed commandos.Zach Caldwell for The New York Times</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/2025/12/09/arts/television/mad-men-hbo-max.html" target="_blank" rel="noopener noreferrer">What Streaming TV Could Learn From ‘Mad Men’The classic show arrived on HBO Max with an embarrassing remastering error. But the show’s creative mastery remains undeniable, our critic writes.6 min readMichael Yarish/AMC</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/2025/12/09/us/california-backyard-housing-rent-storage-unit.html" target="_blank" rel="noopener noreferrer">The Great ReadIn L.A., $750 a Month to Live in a Backyard Storage UnitA landlord crowded tenants into his property without running water or power. One, determined to find an alternative, was up against the city’s housing crisis.10 min readAlex Welsh for The New York Times</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/2025/12/09/us/politics/rubio-state-department-font.html" target="_blank" rel="noopener noreferrer">At State Dept., a Typeface Falls Victim to the War Against WokeSecretary of State Marco Rubio called the Biden-era typeface change “wasteful,” casting the return to Times New Roman as part of a push to quash diversity efforts.3 min readThe New York Times; LucasFonts</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/2025/12/09/business/wall-street-valuation-ai-bubble.html" target="_blank" rel="noopener noreferrer">The New York Times</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/live/2025/12/09/us/trump-news" target="_blank" rel="noopener noreferrer">Doug Mills/The New York Times</a>
+                        </div>
+                    </div>
+                    
+                    <div class="news-card" data-source="New York Times" data-category="国际">
+                        <div class="news-header">
+                            <span class="news-source">New York Times</span>
+                            <span class="news-category">国际</span>
+                            <span class="news-time">2025-12-10 11:22:20</span>
+                        </div>
+                        <div class="news-title">
+                            <a href="https://www.nytimes.com/2025/12/09/us/politics/pentagon-boat-strike-survivors.html" target="_blank" rel="noopener noreferrer">Haiyun Jiang/The New York Times</a>
+                        </div>
+                    </div>
+                    
+                
+            </div>
+        </div>
+    </div>
+
+    <div class="refresh-indicator" id="refreshIndicator">新闻已更新</div>
+
+    <script>
+        // 搜索功能
+        const searchInput = document.getElementById('searchInput');
+        const newsCards = document.querySelectorAll('.news-card');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+
+            newsCards.forEach(card => {
+                const title = card.querySelector('.news-title a').textContent.toLowerCase();
+                if (title.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // 更新统计
+            updateNewsStats();
+        });
+
+        // 来源过滤
+        const sourceItems = document.querySelectorAll('.source-item');
+
+        sourceItems.forEach(item => {
+            item.addEventListener('click', function() {
+                // 更新活动状态
+                sourceItems.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+
+                const source = this.getAttribute('data-source');
+
+                // 过滤新闻卡片
+                newsCards.forEach(card => {
+                    if (source === 'all' || card.getAttribute('data-source') === source) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // 更新统计
+                updateNewsStats();
+            });
+        });
+
+        // 更新新闻统计
+        function updateNewsStats() {
+            const visibleCards = document.querySelectorAll('.news-card[style*="display: block"]');
+            document.getElementById('totalNews').textContent = visibleCards.length;
+        }
+
+        // 自动刷新功能（1800秒 = 30分钟）
+        const REFRESH_INTERVAL = 1800000;
+
+        function autoRefresh() {
+            // 显示刷新指示器
+            const indicator = document.getElementById('refreshIndicator');
+            indicator.classList.add('show');
+
+            // 重新加载页面
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        }
+
+        // 启动自动刷新定时器
+        let refreshTimer = setTimeout(autoRefresh, REFRESH_INTERVAL);
+
+        // 当用户活动时，重置定时器
+        document.addEventListener('mousemove', resetRefreshTimer);
+        document.addEventListener('keypress', resetRefreshTimer);
+        document.addEventListener('scroll', resetRefreshTimer);
+
+        function resetRefreshTimer() {
+            clearTimeout(refreshTimer);
+            refreshTimer = setTimeout(autoRefresh, REFRESH_INTERVAL);
+        }
+    </script>
+</body>
+</html>
