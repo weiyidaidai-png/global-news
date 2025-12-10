@@ -5,8 +5,8 @@
 ## 功能特性
 
 ### 📰 新闻来源
-- **BBC News** - 英国广播公司新闻
-- **CNN** - 美国有线电视新闻网
+- **BBC News** - 英国广播公司
+- **CNN** - 美国有线电视
 - **Reuters** - 路透社
 - **Al Jazeera** - 半岛电视台
 - **New York Times** - 纽约时报（仅公开内容）
@@ -353,3 +353,4 @@ more logs/news_crawler.log
 ---
 
 **祝您使用愉快！** 📰🌍
+
